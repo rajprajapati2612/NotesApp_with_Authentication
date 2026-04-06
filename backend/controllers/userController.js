@@ -301,3 +301,50 @@ export const verifyOTP = async (req,res)=>{
       
    }
 }
+
+
+export const changePassword = async (req,res)=>{
+   const {newPassword, confirmPassword}  = req.body;
+   const email = req.params.email;
+
+   if(!newPassword || !confirmPassword){
+      return res.status(400).json({
+         success: false,
+         message:"All fields are required"
+      })
+   }
+
+   if(newPassword !== confirmPassword){
+      return res.status(400).json({
+         success: false,
+         message: "Password do not match"
+      })
+   }
+
+   try {
+      const user = await User.findOne({email});
+
+      if(!user){
+         return res.status(404).json({
+            success: false,
+            messsage: "user not found"
+         })
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword,10);
+      user.password = hashedPassword;
+      await user.save();
+
+      return res.status(200).json({
+         success: true,
+         message:"Password changed successfully"
+      })
+   } catch (error) {
+      return res.status(500).json({
+         success: false,
+         message: "Internal server error"
+      })
+      
+   }
+
+}
